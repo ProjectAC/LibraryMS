@@ -7,11 +7,13 @@
 
 <script>
 import HelloWorld from './components/HelloWorld'
+import Admin from './components/Admin'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    HelloWorld,
+    Admin
   }
 }
 </script>
