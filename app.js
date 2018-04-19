@@ -12,6 +12,7 @@ const logger = require('koa-logger');
 const index = require('./routes/index');
 const admin = require('./routes/admin');
 const book = require('./routes/book');
+const card = require('./routes/card');
 
 const cors = require('koa-cors');
 import session from "koa-session2";
@@ -50,6 +51,7 @@ app.use(async (ctx, next) => {
 router.use('/', index.routes(), index.allowedMethods());
 router.use('/admin', admin.routes(), admin.allowedMethods());
 router.use('/book', book.routes(), book.allowedMethods());
+router.use('/card', card.routes(), card.allowedMethods());
 
 app.use(router.routes(), router.allowedMethods());
 // response

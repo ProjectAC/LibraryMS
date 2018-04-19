@@ -68,6 +68,13 @@ router.get('/', async function (ctx, next) {
 // Inbound
 router.post('/inbound', async function (ctx, next) {
   
+  let session = ctx.session
+  if (!session['admin'])
+  {
+    ctx.response.body = response.error(response.NOT_LOGGED_IN)
+    return
+  }
+
   let info = ctx.request.body
   
   let query = 'insert into book values '
@@ -87,28 +94,124 @@ router.post('/inbound', async function (ctx, next) {
   else
   {
     query = query.slice(0, -2) + ';'
-    let res = (await sql(query, param))[0]
+    let res = (await sql(query, param))
+
+    console.log(res)
+
     ctx.response.body = response.error(response.OK)
   }
 })
 
-// Borrow
+// Show
+router.get('/borrowed', async function (ctx, next){
+  
+  let info = ctx.query
+  
+  if (session['admin'] == null)
+  {
+    ctx.response.body = response.error(response.NOT_LOGGED_IN)
+    return
+  }
+  
+  if (info['cno'] == null)
+  {
+    ctx.response.body = response.error(response.INFO_INCOMPLETE)
+    return
+  }
 
+  let res = (await sql('\
+    select book.*\
+    from book\
+    natural join borrow\
+    where borrow.cno = ?\
+    and act_return_date is null\
+  ', [
+    info['cno']
+  ]))
+  console.log(res)
+
+  ctx.response.body = res
+})
+
+// Borrow
 router.post('/borrow', async function (ctx, next) {
 
   let info = ctx.request.body
-  
-  if (row['bno'] === undefined)
+  let session = ctx.session
+
+  if (session['admin'] == null)
+  {
+    ctx.response.body = response.error(response.NOT_LOGGED_IN)
+    return
+  }
+
+  if (info['bno'] == null || info['cno'] == null)
+  {
     ctx.response.body = response.error(response.INFO_INCOMPLETE)
+    return
+  }
   
-  
-  
+  try
+  {
+    let res = (await sql('\
+      lock tables card read, book write, borrow write;\
+      call borrowBook(?, ?, ?, @borrow_success, @borrow_stock, @borrow_rettime);\
+      select @borrow_success as success, @borrow_rettime as rettime;\
+      unlock table;',
+      [session['admin']['ano'], info['bno'], info['cno']]
+    ))[2][0]
+
+    if (res['success'])
+      ctx.response.body = response.error(response.OK)
+    else
+      ctx.response.body = response.error(response.NO_RESULT, res['rettime'])
+  }
+  catch (e)
+  {
+    await sql('unlock table;')
+    ctx.response.body = response.error(response.PERMISSION_DENIED)
+  }
 })
 
 // Return
-
-router.post('/', async function (ctx, next) {
+router.post('/return', async function (ctx, next) {
+  let info = ctx.request.body
+  let session = ctx.session
   
+  console.log(session['admin'] == null)
+
+  if (session['admin'] == null)
+  {
+    ctx.response.body = response.error(response.NOT_LOGGED_IN)
+    return
+  }
+
+  if (info['bno'] == null || info['cno'] == null)
+  {
+    ctx.response.body = response.error(response.INFO_INCOMPLETE)
+    return
+  }
+  
+  try
+  {
+    let res = (await sql('\
+      lock tables card read, book write, borrow write;\
+      call returnBook(?, ?, @return_success);\
+      select @return_success as success;\
+      unlock table;',
+      [info['bno'], info['cno']]
+    ))[2][0]
+
+    if (res['success'])
+      ctx.response.body = response.error(response.OK)
+    else
+      ctx.response.body = response.error(response.NO_RESULT)
+  }
+  catch (e)
+  {
+    await sql('unlock table;');
+    ctx.response.body = response.error(response.PERMISSION_DENIED)
+  }
 })
 
 module.exports = router
