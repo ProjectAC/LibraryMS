@@ -3,12 +3,11 @@ import {sql} from '../lib/sql'
 import * as response from '../lib/response'
 
 // List cards
-router.get('/list', async function(ctx, next) {
+router.post('/list', async function(ctx, next) {
 
-  let info = ctx.request.body
   let session = ctx.session
 
-  if (session['admin'] == null)
+  if (session['admin'] == null || session['admin']['ano'] == '00000000')
   {
     ctx.response.body = response.error(response.NOT_LOGGED_IN)
     return
@@ -36,7 +35,44 @@ router.get('/list', async function(ctx, next) {
         on A.cno = __from2__.cno\
         ;\
     ')
-    ctx.response.body = res
+    ctx.response.body = {
+      list: res
+    }
+  } catch (e)
+  {
+    ctx.response.body = response.error(response.PERMISSION_DENIED)
+  }
+})
+
+// List cards
+router.post('/login', async function(ctx, next) {
+  
+  let info = ctx.request.body
+  let session = ctx.session
+
+  if (session['admin'] == null)
+  {
+    ctx.response.body = response.error(response.NOT_LOGGED_IN)
+    return
+  }
+
+  if (!info['cno'])
+  {
+    ctx.response.body = response.error(response.INFO_INCOMPLETE)
+    return
+  }
+
+  try
+  {
+    let res = (await sql('\
+        select * from card where cno = ?;\
+    ', [info['cno']]
+    ))[0]
+
+    if (res)
+      ctx.response.body = res
+    else 
+      ctx.response.body = response.error(response.NO_RESULT)
   } catch (e)
   {
     ctx.response.body = response.error(response.PERMISSION_DENIED)
@@ -49,13 +85,13 @@ router.post('/add', async function (ctx, next) {
   let info = ctx.request.body
   let session = ctx.session
 
-  if (session['admin'] == null)
+  if (session['admin'] == null || session['admin']['ano'] == '00000000')
   {
     ctx.response.body = response.error(response.NOT_LOGGED_IN)
     return
   }
 
-  if (info['cno'] == null || info['name'] == null || info['department'] == null || info['type'] == null)
+  if (!info['cno'] || !info['name'] || !info['department'] || !info['type'])
   {
     ctx.response.body = response.error(response.INFO_INCOMPLETE);
     return
@@ -80,7 +116,7 @@ router.post('/remove', async function (ctx, next) {
   let info = ctx.request.body
   let session = ctx.session
 
-  if (session['admin'] == null)
+  if (session['admin'] == null || session['admin']['ano'] == '00000000')
   {
     ctx.response.body = response.error(response.NOT_LOGGED_IN)
     return
@@ -95,7 +131,7 @@ router.post('/remove', async function (ctx, next) {
   try
   {
     await sql('\
-        delete from card where cno = ?\
+      delete from card where cno = ?\
     ', [info['cno']])
     ctx.response.body = response.error(response.OK)
   } catch (e)

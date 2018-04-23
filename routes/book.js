@@ -3,17 +3,22 @@ import {sql} from '../lib/sql'
 import * as response from '../lib/response'
 
 // Query books
-router.get('/', async function (ctx, next) {
+router.post('/', async function (ctx, next) {
   
-  let info = ctx.query
+  let info = ctx.request.body
 
   let query = '\
     select *\
     from book\
-    where true and \
+    where \
   '
   let param = []
 
+  if (info['bno'])
+  {
+    query += 'bno like ? and '
+    param.push('%' + info['bno'] + '%')
+  }
   if (info['category'])
   {
     query += 'category like ? and '
@@ -32,9 +37,11 @@ router.get('/', async function (ctx, next) {
   if (info['yearl'] || info['yearr'])
   {
     // Just suppose this system can run until 10^9 AD
-    let l = info['yearl'] ? parseInt(info['yearl']) : -1000000000
-    let r = info['yearr'] ? parseInt(info['yearr']) :  1000000000
+    let l = info['yearl'] ? parseInt(info['yearl']) : -1000000000.0
+    let r = info['yearr'] ? parseInt(info['yearr']) :  1000000000.0
 
+    l = isNaN(l) ? -1.0 : l
+    r = isNaN(r) ? 1000000000.0 : r
     query += 'year between ? and ? and '
     param.push(l, r)
   }
@@ -49,27 +56,33 @@ router.get('/', async function (ctx, next) {
     let l = info['pricel'] ? parseFloat(info['pricel']) : -1.0
     let r = info['pricer'] ? parseFloat(info['pricer']) :  1000000000.0
 
+    l = isNaN(l) ? -1.0 : l
+    r = isNaN(r) ? 1000000000.0 : r
     query += 'price between ? and ? and '
     param.push(l, r)
   }
   
-  let order = info['order'] ? info['order'] : 'title'
-  query += 'true order by ? '
-  param.push(info['order'])
+  let order = 'title'
+  let iod = info['order'] 
+  if (iod == 'category' || iod == 'press' || iod == 'year' || iod == 'author' || iod == 'price')
+      order = info['order']
+  let asc = info['asc'] == 'desc' ? 'desc' : 'asc'
+  query += 'true order by ' + order + ' ' + asc + ' '
 
   let limit = info['number'] ? parseInt(info['number']) : 50 
-  query += 'limit ?'
+  query += 'limit ? ;'
   param.push(limit)
 
   let res = (await sql(query, param))
-  ctx.response.body = res
+  ctx.response.body = {list: res}
 })
 
 // Inbound
 router.post('/inbound', async function (ctx, next) {
   
   let session = ctx.session
-  if (!session['admin'])
+
+  if (!session['admin'] || session['admin']['ano'] == '00000000')
   {
     ctx.response.body = response.error(response.NOT_LOGGED_IN)
     return
@@ -93,19 +106,25 @@ router.post('/inbound', async function (ctx, next) {
     ctx.response.body = response.error(response.INFO_INCOMPLETE)
   else
   {
-    query = query.slice(0, -2) + ';'
-    let res = (await sql(query, param))
+    query = query.slice(0, -2) + ' on duplicate key update\
+      total = total + values(total),\
+      stock = stock + values(stock);'
 
-    console.log(res)
-
-    ctx.response.body = response.error(response.OK)
+    try {
+      await sql(query, param)
+      ctx.response.body = response.error(response.OK)
+    } catch (err) {
+      console.log(err.message)
+      ctx.response.body = response.error(response.INFO_INCOMPLETE)
+    }
   }
 })
 
 // Show
-router.get('/borrowed', async function (ctx, next){
+router.post('/borrowed', async function (ctx, next){
   
-  let info = ctx.query
+  let info = ctx.request.body
+  let session = ctx.session
   
   if (session['admin'] == null)
   {
@@ -120,17 +139,22 @@ router.get('/borrowed', async function (ctx, next){
   }
 
   let res = (await sql('\
-    select book.*\
-    from book\
-    natural join borrow\
-    where borrow.cno = ?\
+    select bno as bno, title,\
+      min(borrow_date) as borrow_date,\
+      min(return_date) as return_date,\
+      (min(return_date) < now()) as owed,\
+      count(*) as amount\
+    from borrow natural join book\
+    where cno = ?\
     and act_return_date is null\
+    group by bno;\
   ', [
     info['cno']
   ]))
-  console.log(res)
 
-  ctx.response.body = res
+  ctx.response.body = {
+    list: res
+  }
 })
 
 // Borrow
@@ -177,8 +201,6 @@ router.post('/borrow', async function (ctx, next) {
 router.post('/return', async function (ctx, next) {
   let info = ctx.request.body
   let session = ctx.session
-  
-  console.log(session['admin'] == null)
 
   if (session['admin'] == null)
   {

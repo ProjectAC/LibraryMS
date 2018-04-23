@@ -15,19 +15,13 @@ const book = require('./routes/book');
 const card = require('./routes/card');
 
 const cors = require('koa-cors');
-import session from "koa-session2";
+import session from "koa2-cookie-session";
 
 // middlewares
-app.use(cors());
 app.use(convert(bodyparser));
 app.use(convert(json()));
 app.use(convert(logger()));
 app.use(convert(require('koa-static')(__dirname + '/public')));
-
-app.use(session({
-    key: "SESSIONID",   //default "koa:sess" 
-}));
-console.log('[INFO] Session ready.');
 
 /*
 app.use(views(__dirname + '/views', {
@@ -39,6 +33,12 @@ app.use(views(__dirname + '/views-ejs', {
   extension: 'ejs'
 }));
 
+app.use(cors());
+app.use(session({
+  key: "koa:sid",   //default "koa:sid" 
+  path:"/" //default "/" 
+}));
+console.log('[INFO] Session ready.');
 
 // logger
 app.use(async (ctx, next) => {
@@ -47,6 +47,12 @@ app.use(async (ctx, next) => {
   const ms = new Date() - start;
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
 });
+
+// TODO Extremely important!!!!! 
+app.use(async (ctx, next) => {
+  await next();
+  ctx.append('Access-Control-Allow-Credentials', true);
+})
 
 router.use('/', index.routes(), index.allowedMethods());
 router.use('/admin', admin.routes(), admin.allowedMethods());
