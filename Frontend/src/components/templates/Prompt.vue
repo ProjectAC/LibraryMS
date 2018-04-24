@@ -46,7 +46,7 @@ export default {
 .prompt
 {
   position: fixed;
-  top: 40vh;
+  top: 400px;
   z-index: 101;
   
   left: 50%;

@@ -255,7 +255,10 @@ export default {
       }
       else if (res.body['code'] == -5)
       {
-        alert('卡信息不正确或没有此书。')
+        if (res.body['detail'])
+          alert('书已经被借完。\n最近归还时间：' + this.toDateStr(res.body['detail']))
+        else
+          alert('卡信息不正确或没有此书。')
       }
       else if (res.body['code'])
       {
