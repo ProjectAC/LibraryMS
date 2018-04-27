@@ -25,12 +25,3 @@ Vue.http.interceptors.push((request, next) => {
     request.credentials = true;
     next();
 });
-
-/*
-
-62, 125, 127
-201, 253, 255,
-124, 249, 255
-100, 126, 127
-99, 199, 204
-*/

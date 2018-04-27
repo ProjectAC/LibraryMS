@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.21, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.22, for Linux (x86_64)
 --
 -- Host: localhost    Database: library
 -- ------------------------------------------------------
--- Server version	5.7.21-0ubuntu0.16.04.1
+-- Server version	5.7.22-0ubuntu0.16.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -32,16 +32,6 @@ CREATE TABLE `admin` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `admin`
---
-
-LOCK TABLES `admin` WRITE;
-/*!40000 ALTER TABLE `admin` DISABLE KEYS */;
-INSERT INTO `admin` VALUES ('00000000','f292ddf89063347809084efdc1e63eb5','自动柜员机','1846326091@qq.com'),('1','f292ddf89063347809084efdc1e63eb5','SOL','3160105063@zju.edu.cn');
-/*!40000 ALTER TABLE `admin` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `book`
 --
 
@@ -61,16 +51,6 @@ CREATE TABLE `book` (
   PRIMARY KEY (`bno`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `book`
---
-
-LOCK TABLES `book` WRITE;
-/*!40000 ALTER TABLE `book` DISABLE KEYS */;
-INSERT INTO `book` VALUES ('bno1','计算机','SQL Server 2008完全学习手册','清华出版社',2001,'郭郑州',79.80,5,4),('bno2','计算机','程序员的自我修养','电子工业出版社',2013,'俞甲子',65.00,5,1),('bno3','文学','世界树默示录','无',2018,'SOL',0.00,24,24),('bno4','注入和XSS','\';insert into card values(\'1\');','123',2018,'SOL',1.00,1,1);
-/*!40000 ALTER TABLE `book` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `borrow`
@@ -94,16 +74,6 @@ CREATE TABLE `borrow` (
   CONSTRAINT `cnofk` FOREIGN KEY (`cno`) REFERENCES `card` (`cno`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `borrow`
---
-
-LOCK TABLES `borrow` WRITE;
-/*!40000 ALTER TABLE `borrow` DISABLE KEYS */;
-INSERT INTO `borrow` VALUES ('0000001','bno1','2018-04-23 08:48:14','2018-05-23 08:48:14','2018-04-23 08:48:26','1'),('0000001','bno1','2018-04-23 08:48:17','2018-05-23 08:48:17','2018-04-23 08:48:33','1'),('0000001','bno1','2018-04-23 08:48:20','2018-05-23 08:48:20',NULL,'1'),('0000001','bno2','2018-04-23 08:48:30','2018-05-23 08:48:30',NULL,'1'),('0000006','bno2','2018-04-23 08:49:22','2018-05-23 08:49:22',NULL,'1'),('0000006','bno2','2018-04-23 08:49:25','2018-05-23 08:49:25',NULL,'1'),('0000006','bno2','2018-04-23 08:49:29','2018-05-23 08:49:29',NULL,'1');
-/*!40000 ALTER TABLE `borrow` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -142,16 +112,6 @@ CREATE TABLE `card` (
   PRIMARY KEY (`cno`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `card`
---
-
-LOCK TABLES `card` WRITE;
-/*!40000 ALTER TABLE `card` DISABLE KEYS */;
-INSERT INTO `card` VALUES ('0000001','NoName','NoDept','U'),('0000002','黄文翔','计院','U'),('0000003','一菜','信电','U'),('0000004','学仙','学仙','U'),('0000005','辣鸡','Spicy Chicken','S'),('0000006','虵','电机系','P');
-/*!40000 ALTER TABLE `card` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -292,4 +252,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-04-23 19:20:37
+-- Dump completed on 2018-04-27 21:21:00
